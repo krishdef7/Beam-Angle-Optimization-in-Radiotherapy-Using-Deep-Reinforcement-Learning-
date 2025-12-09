@@ -1,12 +1,20 @@
 import os, numpy as np, torch, matplotlib.pyplot as plt, pandas as pd
 from train import policy, load_patients, organs, shape, max_beams, generate_beam, beam_angles
 from baselines import equiangular_beams, random_beam_sets, heuristic_beams_from_ptv, greedy_beams
+import json
 
+cfg = json.load(open("configs/experiments.json"))
+test_dir = cfg["test_dir"]
+
+# ---- directory for saved figures (always inside this repo) ----
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+fig_dir = os.path.join(SCRIPT_DIR, "figures")
+os.makedirs(fig_dir, exist_ok=True)
+print("Saving figures to:", fig_dir)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("🧠 Using device:", device)
 
-test_dir = r"C:\BAO\openkbp_patient_data\test-pats"
 print("📂 Test data:", test_dir)
 
 from torch.serialization import add_safe_globals
@@ -16,6 +24,7 @@ checkpoint = torch.load("best_dqn_model.pt", map_location=device, weights_only=F
 policy.load_state_dict(checkpoint["policy_state_dict"])
 policy.eval()
 print("✅ Best model loaded")
+
 
 def evaluate_beam_set_on_patient(pt, beam_indices, beam_angles, max_beams=5):
     dose = np.zeros((pt.shape[1], pt.shape[2]), dtype=np.float32)
@@ -29,7 +38,8 @@ def evaluate_beam_set_on_patient(pt, beam_indices, beam_angles, max_beams=5):
 
 def compute_d95(dose, mask):
     vals = dose[mask > 0]
-    return np.percentile(vals,5) if len(vals)>0 else 0
+    return np.percentile(vals, 5) if len(vals) > 0 else 0
+
 
 def compute_metrics(dose, pt, organs):
     ptv = pt[1]
@@ -49,8 +59,10 @@ def compute_metrics(dose, pt, organs):
     }
     return metrics
 
+
 def build_state(patient_data, dose_map):
-    return np.vstack([patient_data, dose_map[np.newaxis,:,:]]).astype(np.float32)
+    return np.vstack([patient_data, dose_map[np.newaxis, :, :]]).astype(np.float32)
+
 
 print("📦 Loading test patients...")
 test_patients = load_patients(test_dir, organs, shape)
@@ -137,48 +149,63 @@ for idx, pt in enumerate(test_patients):
         "Beams": None
     })
 
-    # ---------- OPTIONAL: plotting (only for a few patients) ----------
-    if idx < 3:  # plot only first 3 patients to avoid spam
-        ct = pt[0]
-        ct = (ct - ct.min()) / (ct.max() - ct.min() + 1e-8)
+    # ---------- SAVE FIGURES (ALL PATIENTS, DQN DOSE + DVH) ----------
+    ct = pt[0]
+    ct = (ct - ct.min()) / (ct.max() - ct.min() + 1e-8)
 
-        plt.figure(figsize=(6,6))
-        plt.imshow(ct, cmap="gray", alpha=1.0)
-        img = plt.imshow(dose, cmap="hot", alpha=0.55)
+    # ----- Dose map figure -----
+    fig1 = plt.figure(figsize=(6, 6))
+    plt.imshow(ct, cmap="gray", alpha=1.0)
+    img = plt.imshow(dose, cmap="hot", alpha=0.55)
 
-        ptv_edge = np.logical_xor(ptv, np.logical_and(
-            np.pad(ptv[1:,:], ((0,1),(0,0))),
-            np.pad(ptv[:,1:], ((0,0),(0,1)))
-        ))
-        plt.contour(ptv_edge, colors="cyan", linewidths=1.5)
-        plt.title(f"Patient {idx} — DQN Dose Map\n(Tumor = Cyan Boundary)")
-        plt.colorbar(img, label="Normalized Dose")
-        plt.axis("off")
-        plt.show()
+    ptv_edge = np.logical_xor(ptv, np.logical_and(
+        np.pad(ptv[1:, :], ((0, 1), (0, 0))),
+        np.pad(ptv[:, 1:], ((0, 0), (0, 1)))
+    ))
+    plt.contour(ptv_edge, colors="cyan", linewidths=1.5)
+    plt.title(f"Patient {idx} — DQN Dose Map\n(Tumor = Cyan Boundary)")
+    plt.colorbar(img, label="Normalized Dose")
+    plt.axis("off")
 
-        # DVH
-        plt.figure(figsize=(6,5))
-        ptv_vals = dose[ptv > 0].flatten()
-        plt.hist(ptv_vals, bins=80, density=True, histtype="step",
-                 linewidth=2, label="PTV (Target)")
+    dose_path = os.path.join(fig_dir, f"patient_{idx:03d}_dose_dqn.png")
+    fig1.savefig(dose_path, dpi=300, bbox_inches="tight")
+    plt.close(fig1)
 
-        for oar, name in zip(oars, organs):
-            if oar.sum() > 0:
-                vals = dose[oar > 0].flatten()
-                plt.hist(vals, bins=80, density=True, histtype="step",
-                         linewidth=1.3, label=name)
+    # ----- DVH figure -----
+    fig2 = plt.figure(figsize=(6, 5))
+    ptv_vals = dose[ptv > 0].flatten()
+    plt.hist(ptv_vals, bins=80, density=True, histtype="step",
+             linewidth=2, label="PTV (Target)")
 
-        plt.xlabel("Dose (normalized)")
-        plt.ylabel("Volume Fraction")
-        plt.title(f"DVH — Patient {idx} (DQN)")
-        plt.grid(alpha=0.3)
-        plt.legend(fontsize=8)
-        plt.show()
+    for oar, name in zip(oars, organs):
+        if oar.sum() > 0:
+            vals = dose[oar > 0].flatten()
+            plt.hist(vals, bins=80, density=True, histtype="step",
+                     linewidth=1.3, label=name)
+
+    plt.xlabel("Dose (normalized)")
+    plt.ylabel("Volume Fraction")
+    plt.title(f"DVH — Patient {idx} (DQN)")
+    plt.grid(alpha=0.3)
+    plt.legend(fontsize=8)
+
+    dvh_path = os.path.join(fig_dir, f"patient_{idx:03d}_dvh_dqn.png")
+    fig2.savefig(dvh_path, dpi=300, bbox_inches="tight")
+    plt.close(fig2)
+
+
+# ---------- SAVE RESULTS ----------
+results_dir = os.path.join(SCRIPT_DIR, "results")
+os.makedirs(results_dir, exist_ok=True)
 
 df = pd.DataFrame(results)
-df.to_csv("test_results.csv",index=False)
-print("\n✅ Results saved: test_results.csv")
+csv_path = os.path.join(results_dir, "test_results.csv")
+df.to_csv(csv_path, index=False)
+
+print(f"\n✅ Results saved: {csv_path}")
 print("\n📊 Overall Mean:")
 print(df.mean(numeric_only=True))
 print("\n📊 Mean by method:")
 print(df.groupby("method")[["Coverage", "D95"]].mean())
+
+
