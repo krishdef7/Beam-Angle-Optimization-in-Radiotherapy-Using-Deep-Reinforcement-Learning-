@@ -103,7 +103,7 @@ Split:
 - Validation: **40**
 - Test: **100**
 
-Users must download OpenKBP separately and update paths in `configs/experiments.json`
+🛠 Users must download OpenKBP separately and update paths in `configs/experiments.json`
 
 
 ---
