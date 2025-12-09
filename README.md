@@ -82,7 +82,7 @@ Deep-Reinforcement-Learning-for-Personalized-Radiotherapy-Beam-Orientation-Optim
 
 ```bash
 git clone https://github.com/krishdef7/Deep-Reinforcement-Learning-for-Personalized-Radiotherapy-Beam-Orientation-Optimization.git
-cd Beam-Angle-Optimization-in-Radiotherapy-Using-Deep-Reinforcement-Learning
+cd Deep-Reinforcement-Learning-for-Personalized-Radiotherapy-Beam-Orientation-Optimization
 pip install -r requirements.txt
 ```
 
