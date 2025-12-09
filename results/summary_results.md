@@ -26,7 +26,7 @@ The DQN systematically improves PTV coverage and D95 relative to equiangular and
 
 ## 🩻 Dose Distribution Examples
 
-Representative samples (see `/figures_sample/`):
+Representative samples (see `/figures/`):
 
 | Patient | Coverage | D95 |
 |--------|----------|-----|
