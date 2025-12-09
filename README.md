@@ -210,7 +210,7 @@ DVH curves reflect improved target coverage.
 
 ## 📊 Baselines Implemented
 
-All evaluated under **identical surrogate dose** to ensure fair comparision:
+All evaluated under **identical surrogate dose** to ensure fair comparison:
 
 - **Equiangular beams**
 - **Geometry heuristic**
