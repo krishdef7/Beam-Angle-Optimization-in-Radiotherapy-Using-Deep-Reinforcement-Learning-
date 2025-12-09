@@ -27,10 +27,10 @@ This repository contains the code and experiments for my work on **patient-speci
 Selecting clinically optimal beam orientations is crucial in radiotherapy.  
 Conventional BOO methods:
 
-- ❌ Not personalized to anatomy
-- ❌ Computationally infeasible at large search spaces
-- ❌ Insensitive to voxel-level geometry
-- ❌ Require repeated full dose simulations
+-  Not personalized to anatomy ❌
+-  Computationally infeasible at large search spaces ❌
+-  Insensitive to voxel-level geometry ❌
+-  Require repeated full dose simulations ❌
 
 ---
 
