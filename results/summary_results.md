@@ -24,7 +24,7 @@ The DQN generally improves PTV coverage and D95 relative to equiangular and heur
 
 ---
 
-# Summary of Representative Evaluation Cases (n = 20)
+# Summary of Qualitatively Reviewed Cases (n = 20)
 
 We highlight 20 representative test patients for which qualitative dose and DVH figures were generated:
 
