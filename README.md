@@ -53,7 +53,7 @@ Inference time: **<1 second** per patient.
 ## 📁 Repository Structure
 
 ```
-Beam-Angle-Optimization-in-Radiotherapy-Using-Deep-Reinforcement-Learning/
+Deep-Reinforcement-Learning-for-Personalized-Radiotherapy-Beam-Orientation-Optimization/
 ├── configs/
 │   └── experiments.json
 ├── figures/
@@ -103,7 +103,7 @@ Split:
 - Validation: **40**
 - Test: **100**
 
-Users must download OpenKBP separately and update paths in `configs/experiments.json`.
+Users must download OpenKBP separately and update paths in `configs/experiments.json`
 
 
 ---
@@ -116,9 +116,9 @@ python eval_main.py
 
 Outputs will include:
 
-- `results/test_results.csv`
-- `results/summary_results.md`
-- `figures/<category>/dose_and_dvh_figures.png`
+- `results/test_results.csv` — per-patient metrics (D95, coverage, OAR doses)
+- `figures/patient_XXX_dose_dqn.png` — DQN dose maps overlaid on CT
+- `figures/patient_XXX_dvh_dqn.png` — dose–volume histogram plots
 
 
 ---
